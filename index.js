@@ -6,6 +6,9 @@ import userRouter from './src/routes/userRoute.js';
 
 app.use(express.json());
 app.use('/api/v1', userRouter);
+app.get('/',function(req,res){
+    res.send('WELCOME')
+})
 
 
 const port = 5000;
