@@ -18,7 +18,7 @@ router.get('/getAllUsers',getAllUser, verifyToken);
 router.put('/updateUserById', updateUserById);
 
 //  get user by id 
-router.get('/getUserId', getUserId);
+router.get('/getUserId', getUserId, verifyToken);
 
 //  delete user
 router.delete('/deleteUser', deleteUser);

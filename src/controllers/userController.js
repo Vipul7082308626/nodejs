@@ -6,6 +6,8 @@ import { validateEmail, validatePassword, validateFullName } from "../validate/v
 import envconfig from "../config/envConfig.js";
 // user register
 import transporter from "../middleWare/emailConfig.js";
+import { verifyToken } from "../middleWare/verifyToken.js";
+
 const userRegister = async (req, res) => {
     try {
         const { fullName, email, password } = req.body;
@@ -62,13 +64,15 @@ const Login = async (req, res) => {
         const matchPassword = await bcrypt.compare(password, existingUser.password);
         if (!matchPassword) {
             return res.status(400).json({ message: "invalid credentials" });
+
         }
         const token = Jwt.sign({ id: existingUser._id, email: existingUser.email }, envconfig.SECRET_KEY)
 
-        const userData = token;
+        let userData = { token: token };
         return res.status(200).json({ message: "login succesfully", userData });
 
-    } catch (error) {
+    }
+    catch (error) {
         console.log(error);
         res.status(500).json({ message: "something went wrong" });
     }
@@ -168,19 +172,22 @@ let updateUserById = async (req, res, next) => {
 
 let getUserId = async (req, res, next) => {
     try {
-        const token = req.header('Authorization')?.split(' ')[1]
-        if (!token) {
-            return res.status(401).json({ message: 'token is missing' });
-        }
-        const decode = Jwt.verify(token, envconfig.SECRET_KEY);
-        let getUser = await User.findById(decode.id);
-        
-        if (!getUser) {
-            return res.status(404).json({ message: "user not found" });
-        }
-        else {
-            return res.status(200).json({ message: "user found", getUser });
-        }
+        verifyToken(req, res, async () => {
+
+            const { id } = req.user
+            if (!id) {
+                return res.status(404).json({ message: "ID is missing" })
+            }
+
+            let getUser = await User.findById(id);
+
+            if (!getUser) {
+                return res.status(404).json({ message: "user not found" });
+            }
+            else {
+                return res.status(200).json({ message: "user found", getUser });
+            }
+        })
     }
     catch (error) {
         console.error("error", error);
